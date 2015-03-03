@@ -52,15 +52,11 @@ namespace WatchIPC
 		/// <returns>The message.</returns>
 		/// <param name="messageType">Message type.</param>
 		/// <param name="message">Message.</param>
-		static public NSDictionary PrepareMessage<T> (IPCMessageType messageType, IPCMessage<T> requestMessage=null) where T : IPCParams, new()
+		static public NSDictionary PrepareMessage<T> (IPCMessageType messageType, IPCMessage<T> requestMessage) where T : IPCParams, new()
 		{
 			Console.WriteLine("PrepareMessage " + messageType);
-			NSMutableDictionary dict = null;
+			NSMutableDictionary dict = requestMessage.EncodeParams();
 
-			if (requestMessage == null)
-				dict = new  NSMutableDictionary();
-			else
-				dict = requestMessage.EncodeParams();
 			dict.SetValueForKey(new NSNumber((int)messageType), new NSString(IPCConstants.TypeTag));
 
 			return dict;

@@ -12,3 +12,55 @@ when required. Supports both directions so you can pass params to App via a IPC 
 WatchExtension as a respose.
 
 Full sample code enclosed but its the WatchIPC folder that has the clever stuff
+
+Example : -
+
+Create request on WatchExtension
+
+			IPCMessage<ExampleResponseParams> responseMessage = null;
+			Console.WriteLine ("Example IPC 1");
+
+			IPCMessage<ExampleRequestParams> requestParams = new IPCMessage<ExampleRequestParams>();
+			requestParams.Params.SomeMessage = "Send this to app";
+
+			try {
+				responseMessage = await MessageHandler.RequestMessage<ExampleResponseParams, ExampleRequestParams> (IPCMessageType.ExampleIPCMessage1, requestParams);
+				Console.WriteLine ("Got response from phone app so displaying the response details");
+				foreach(var entity in responseMessage.Params.SomeList)
+				{
+					Console.WriteLine(entity.ID);
+				}
+			} catch (Exception ex) {
+				Console.WriteLine (ex);
+			}
+			
+Trap and respond on App Side
+
+			NSNumber messageId = userInfo.ObjectForKey(new NSString(IPCConstants.TypeTag)) as NSNumber;
+			IPCMessageType watchMessageType = (IPCMessageType)messageId.Int32Value;
+			Console.WriteLine("IPC Message " + watchMessageType);
+
+			switch (watchMessageType)
+			{
+				case IPCMessageType.ExampleIPCMessage1:
+					{
+						// decode message params
+						IPCMessage<ExampleRequestParams> message = new IPCMessage<ExampleRequestParams>();
+						message.DecodeParams(userInfo);
+
+						Console.WriteLine("Contents of request " + message.Params.SomeMessage);
+
+						// create response message
+						IPCMessage<ExampleResponseParams> responseMessage = new IPCMessage<ExampleResponseParams>();
+
+						// populate repsonse message which is a list of ints
+						responseMessage.ErrorCode = ErrorCode.Success;
+						responseMessage.Params.SomeList.Add(new ResponseEntity(){ ID=1});
+						responseMessage.Params.SomeList.Add(new ResponseEntity(){ ID=2});
+						responseMessage.Params.SomeList.Add(new ResponseEntity(){ ID=4});
+
+						// reply to message
+						reply(responseMessage.EncodeParams());
+						break;
+					}
+			}
